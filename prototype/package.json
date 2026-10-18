@@ -4,5 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "three": "^0.181.1"
   }
 }

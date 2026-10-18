@@ -1,5 +1,9 @@
+import * as THREE from "three";
+import { GLTFLoader } from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js";
+
 const canvas = document.querySelector("#raceCanvas");
 const ctx = canvas.getContext("2d");
+const canvas3d = document.querySelector("#raceCanvas3d");
 const startButton = document.querySelector("#startButton");
 const resetButton = document.querySelector("#resetButton");
 const modeButton = document.querySelector("#modeButton");
@@ -7,6 +11,9 @@ const launchAgentsButton = document.querySelector("#launchAgentsButton");
 const apiNotice = document.querySelector("#apiNotice");
 const countdown = document.querySelector("#countdown");
 const eventLog = document.querySelector("#eventLog");
+
+const roadsterSprite = new Image();
+roadsterSprite.src = "./assets/roadster-top.webp";
 
 const TAU = Math.PI * 2;
 const LAPS_TO_WIN = 3;
@@ -16,6 +23,7 @@ let externalMode = false;
 let lastTime = performance.now();
 let elapsed = 0;
 let particles = [];
+let threeView = null;
 
 const agents = {
   a: makeAgent("a", "#59dcff", -22, 0.94, 0.000112, 0.00007),
@@ -40,6 +48,129 @@ function pointOnTrack(progress, lane = 0) {
   const dx = -(track.rx + lane) * Math.sin(angle);
   const dy = (track.ry + lane * .55) * Math.cos(angle);
   return { x, y, angle: Math.atan2(dy, dx), curve: Math.abs(Math.sin(angle)) };
+}
+
+function ellipsePoints(rx, rz, y = 0, count = 160) {
+  return Array.from({ length: count }, (_, index) => {
+    const angle = index / count * TAU;
+    return new THREE.Vector3(rx * Math.cos(angle), y, rz * Math.sin(angle));
+  });
+}
+
+function makeTrackMesh() {
+  const outer = ellipsePoints(11.55, 6.5).map(point => new THREE.Vector2(point.x, point.z));
+  const inner = ellipsePoints(8.45, 3.55).reverse().map(point => new THREE.Vector2(point.x, point.z));
+  const shape = new THREE.Shape(outer);
+  shape.holes.push(new THREE.Path(inner));
+  const geometry = new THREE.ShapeGeometry(shape, 160);
+  geometry.rotateX(-Math.PI / 2);
+  const road = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x252a32, roughness: .82, metalness: .12 }));
+  road.receiveShadow = true;
+  return road;
+}
+
+function makeCircuitLine(rx, rz, color, opacity = 1) {
+  const geometry = new THREE.BufferGeometry().setFromPoints(ellipsePoints(rx, rz, .055));
+  return new THREE.LineLoop(geometry, new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity }));
+}
+
+function worldPoint(agent) {
+  const angle = agent.progress * TAU - Math.PI / 2;
+  const lane = agent.lane * .018;
+  const x = (10 + lane) * Math.cos(angle);
+  const z = (5 + lane * .55) * Math.sin(angle);
+  const dx = -(10 + lane) * Math.sin(angle);
+  const dz = (5 + lane * .55) * Math.cos(angle);
+  return { x, z, heading: Math.atan2(dz, dx) };
+}
+
+async function init3D() {
+  try {
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x030407);
+    scene.fog = new THREE.FogExp2(0x030407, .026);
+    const camera = new THREE.PerspectiveCamera(38, 16 / 9, .1, 100);
+    camera.position.set(0, 17.5, 21.5);
+    camera.lookAt(0, 0, 0);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(44, 30),
+      new THREE.MeshStandardMaterial({ color: 0x07090d, roughness: .95, metalness: .08 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -.035;
+    ground.receiveShadow = true;
+    scene.add(ground, makeTrackMesh());
+    scene.add(makeCircuitLine(11.58, 6.53, 0xff2438), makeCircuitLine(8.42, 3.52, 0xff2438));
+    scene.add(makeCircuitLine(10, 5, 0xffffff, .18));
+
+    const hemi = new THREE.HemisphereLight(0xb8d8ff, 0x13070a, 2.4);
+    const key = new THREE.DirectionalLight(0xffffff, 4.2);
+    key.position.set(-6, 16, 8); key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    scene.add(hemi, key);
+    for (const [x, color] of [[-9, 0x59dcff], [9, 0xa985ff]]) {
+      const light = new THREE.PointLight(color, 34, 13, 2);
+      light.position.set(x, 2.5, 0); scene.add(light);
+    }
+
+    const gltf = await new GLTFLoader().loadAsync("./assets/roadster.glb");
+    const cars = {};
+    for (const [id, color] of [["a", 0x59dcff], ["b", 0xa985ff]]) {
+      const group = gltf.scene.clone(true);
+      group.traverse(object => {
+        if (!object.isMesh) return;
+        object.material = object.material.clone();
+        object.material.color.lerp(new THREE.Color(color), .13);
+        object.castShadow = true; object.receiveShadow = true;
+      });
+      const box = new THREE.Box3().setFromObject(group);
+      const size = box.getSize(new THREE.Vector3());
+      const scale = 1.9 / Math.max(size.x, size.z);
+      group.scale.setScalar(scale);
+      const centered = new THREE.Box3().setFromObject(group);
+      const center = centered.getCenter(new THREE.Vector3());
+      group.position.sub(center);
+      const carRoot = new THREE.Group();
+      carRoot.add(group);
+      const glow = new THREE.PointLight(color, 8, 3.6, 2); glow.position.y = .6; carRoot.add(glow);
+      scene.add(carRoot); cars[id] = carRoot;
+    }
+    canvas.style.display = "none";
+    threeView = { renderer, scene, camera, cars };
+    log("Akari’s 3D roadster model loaded", "#75e8b1");
+  } catch (error) {
+    canvas3d.style.display = "none";
+    canvas.style.display = "block";
+    console.warn("3D view unavailable; using 2D fallback", error);
+    log("3D unavailable — 2D fallback active", "#ffba75");
+  }
+}
+
+function draw3D() {
+  if (!threeView) return false;
+  const { renderer, scene, camera, cars } = threeView;
+  const width = canvas3d.clientWidth;
+  const height = canvas3d.clientHeight;
+  if (canvas3d.width !== Math.round(width * renderer.getPixelRatio()) || canvas3d.height !== Math.round(height * renderer.getPixelRatio())) {
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height; camera.updateProjectionMatrix();
+  }
+  for (const agent of Object.values(agents)) {
+    const point = worldPoint(agent);
+    cars[agent.id].position.set(point.x, .08, point.z);
+    cars[agent.id].rotation.y = -point.heading;
+  }
+  renderer.render(scene, camera);
+  return true;
 }
 
 function localDecision(agent, rival) {
@@ -153,6 +284,7 @@ function emitParticle(agent) {
 }
 
 function draw() {
+  if (draw3D()) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const bg = ctx.createRadialGradient(800, 470, 40, 800, 470, 850);
   bg.addColorStop(0, "#11141a"); bg.addColorStop(.55, "#07090e"); bg.addColorStop(1, "#020305");
@@ -206,12 +338,29 @@ function drawCar(agent) {
   const p = pointOnTrack(agent.progress, agent.lane);
   ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle);
   ctx.shadowColor = agent.color; ctx.shadowBlur = 26;
-  ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillRect(-34, -14, 74, 36);
-  ctx.fillStyle = "#eef1f5";
-  roundRect(ctx, -38, -18, 76, 36, 11); ctx.fill();
-  ctx.fillStyle = "#101319"; roundRect(ctx, -8, -14, 27, 28, 7); ctx.fill();
-  ctx.fillStyle = agent.color; ctx.fillRect(25, -13, 8, 26);
-  ctx.fillRect(-32, -16, 13, 3); ctx.fillRect(-32, 13, 13, 3);
+  if (roadsterSprite.complete && roadsterSprite.naturalWidth) {
+    const spriteSize = 128;
+    ctx.drawImage(roadsterSprite, -spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
+
+    // Akari's source car is white, so a light team tint keeps both agents
+    // distinguishable while preserving the model's materials and silhouette.
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.globalAlpha = .2;
+    ctx.fillStyle = agent.color;
+    ctx.fillRect(-spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = agent.color;
+    ctx.fillRect(-44, -18, 5, 36);
+  } else {
+    // Keep the race usable while the sprite is loading or if it is unavailable.
+    ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillRect(-34, -14, 74, 36);
+    ctx.fillStyle = "#eef1f5";
+    roundRect(ctx, -38, -18, 76, 36, 11); ctx.fill();
+    ctx.fillStyle = "#101319"; roundRect(ctx, -8, -14, 27, 28, 7); ctx.fill();
+    ctx.fillStyle = agent.color; ctx.fillRect(25, -13, 8, 26);
+    ctx.fillRect(-32, -16, 13, 3); ctx.fillRect(-32, 13, 13, 3);
+  }
   ctx.restore();
 }
 
@@ -325,6 +474,7 @@ document.querySelectorAll("[data-nudge]").forEach(button => button.addEventListe
 }));
 
 log("Prototype ready");
+init3D();
 fetch("/api/health")
   .then(response => response.json())
   .then(health => {

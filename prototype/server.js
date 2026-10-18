@@ -16,6 +16,8 @@ const mime = {
   ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".png": "image/png",
+  ".webp": "image/webp",
+  ".glb": "model/gltf-binary",
 };
 
 function json(res, status, value) {

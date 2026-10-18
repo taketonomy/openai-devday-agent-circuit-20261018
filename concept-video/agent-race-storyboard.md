@@ -16,10 +16,10 @@ Explain the hackathon prototype before or alongside the live demo. This is expli
 
 - Format: 1920×1080, 30 fps, H.264/AAC
 - Duration: 24 seconds
-- File: `agent-race-concept-v2.mp4`
+- File: `agent-race-cinematic-v3.mp4`
 - Visual direction: black outdoor event stage, luminous red track edge, white cars with agent-color accents, and cinematic wide framing. Inspired by the atmosphere of the 2026 Roadster event without using Tesla branding or source assets.
 
-## Cinematic v3
-
-`agent-race-cinematic-v3.mp4` uses original AI-generated key art derived from the reference mood—not Tesla imagery or vehicle designs—with a slow camera move and animated agent telemetry.
+The final cinematic uses original AI-generated key art derived from the
+reference mood—not Tesla imagery or vehicle designs—with a slow camera move
+and animated agent telemetry.
 

@@ -22,6 +22,7 @@
       </header>
 
       <section class="stage" aria-label="Two-agent racing circuit">
+        <canvas id="raceCanvas3d" aria-label="3D two-agent racing circuit"></canvas>
         <canvas id="raceCanvas" width="1600" height="900"></canvas>
         <div id="countdown" class="countdown" aria-live="polite"></div>
         <div class="stage-copy">
@@ -100,6 +101,9 @@
         </article>
       </section>
     </main>
+    <script type="importmap">
+      { "imports": { "three": "./node_modules/three/build/three.module.js" } }
+    </script>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

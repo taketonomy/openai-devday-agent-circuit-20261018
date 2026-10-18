@@ -1,11 +1,16 @@
 # Agent Circuit Prototype
 
-A dependency-free browser prototype based on the cinematic v3 specification.
+A browser prototype based on the cinematic v3 specification, using Three.js
+for the race viewport and a canvas fallback.
+
+The race cars use Akari's glTF 2.0 model from `assets/roadster.glb` in the
+3D/WebGL viewport. `assets/roadster-top.webp` provides the 2D fallback.
 
 ## Run
 
 ```bash
 cd prototype
+npm install
 ./start-secure.sh
 ```
 
