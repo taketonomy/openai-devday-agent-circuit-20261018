@@ -8,7 +8,7 @@
 
 The team coordinated through an X group chat created by Takao Ken after meeting at the DevDay hackathon eve party.
 
-## Current Prototype
+## Prototype A — Autonomous Agent Race
 
 Takao Ken created the initial working prototype using the OpenAI Agents API with computer use.
 
@@ -17,6 +17,20 @@ The prototype is a two-car circuit race:
 - Two agents compete in the same racing environment.
 - Each agent independently drives one car.
 - Each agent uses computer-use controls to perceive the environment and operate its car.
+
+## Prototype B — Human Intervention in Agent Action
+
+Akari created a second prototype from an HCI research perspective. Its central concept is that a human can interrupt or intervene in an agent's autonomous behavior when necessary, helping the agent recover or achieve the intended goal.
+
+This introduces a complementary interaction model:
+
+```text
+Agent observes → Agent acts → Human intervenes when needed → Agent adapts → Goal achieved
+```
+
+Rather than treating autonomy as an all-or-nothing mode, the prototype explores shared agency: the agent continues doing the work, while the human supplies timely judgment, correction, or direction at critical moments.
+
+The precise intervention mechanism and handoff behavior are still to be documented.
 
 ## Demo Story
 
@@ -106,6 +120,9 @@ flowchart TB
 5. What failure or recovery behavior makes the demo more than a scripted race?
 6. Should the public circuit use short-lived race IDs or signed session tokens to prevent unauthorized control?
 7. What telemetry transport should connect the public circuit and private dashboard within the Sites runtime?
+8. What triggers human intervention: a user decision, an agent request, low confidence, or detected failure?
+9. Does intervention pause the agent, modify its plan, directly control the car, or provide higher-level guidance?
+10. How does the interface make control ownership and the return to autonomy visible?
 
 ## References
 

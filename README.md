@@ -4,6 +4,8 @@ OpenAI DevDay Hackathon project — October 18, 2026.
 
 Two autonomous agents compete on the same circuit. Each agent observes the browser, decides how to drive, and operates its own car through computer-use controls.
 
+A complementary HCI prototype explores shared agency: a human can intervene in an agent's behavior at critical moments to help it recover and achieve the goal, then return control to the agent.
+
 ## Team
 
 - Taketo — concept, product direction, and pitch
