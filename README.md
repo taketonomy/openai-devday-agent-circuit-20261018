@@ -40,6 +40,7 @@ The `concept-video/` directory contains the original cinematic key art, reproduc
 
 ## Documentation
 
+- [Concept sheet — Playable Waiting](concept-sheet.md)
 - [Team and prototype context](knowledge/team-and-prototype-2026-10-18.md)
 - [OpenAI Agents API computer use](https://developers.openai.com/api/docs/guides/agents-api/tools/computer-use)
 
