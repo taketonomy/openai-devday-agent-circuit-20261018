@@ -22,6 +22,68 @@ The prototype is a two-car circuit race:
 
 Two AI agents perceive, decide, act, and compete in a shared visual environment in real time.
 
+## Proposed Sharing and Hosting Architecture
+
+Use ChatGPT Sites as the durable team-demo host, with a security boundary between the operator controls and the page driven by the computer-use agents.
+
+```mermaid
+flowchart TB
+    Team["Team members"]
+
+    subgraph Sites["ChatGPT Sites — HTTPS hosting"]
+        subgraph Private["Private operator dashboard"]
+            Login["ChatGPT sign-in"]
+            Dashboard["Race control<br/>Launch · monitor · stop"]
+            LaunchAPI["Protected launch endpoint"]
+            Login --> Dashboard --> LaunchAPI
+        end
+
+        subgraph Public["Public agent-accessible circuit"]
+            Track["Race circuit UI"]
+            CarA["Car A controls"]
+            CarB["Car B controls"]
+            RaceState["Race state and telemetry"]
+            Track --> CarA
+            Track --> CarB
+            CarA <--> RaceState
+            CarB <--> RaceState
+        end
+
+        Runtime["Sites server runtime<br/>Cloudflare Worker"]
+        Secret["OPENAI_API_KEY<br/>runtime secret"]
+        LaunchAPI --> Runtime
+        Secret -. "server-side only" .-> Runtime
+        Dashboard <-->|"status updates"| RaceState
+    end
+
+    OpenAI["OpenAI Agents API"]
+    AgentA["Computer-use agent A"]
+    AgentB["Computer-use agent B"]
+
+    Team -->|"authenticated HTTPS"| Login
+    Runtime -->|"create two sessions"| OpenAI
+    OpenAI --> AgentA
+    OpenAI --> AgentB
+    AgentA -->|"visual observation and clicks"| CarA
+    AgentB -->|"visual observation and clicks"| CarB
+```
+
+### Security boundary
+
+- Team members authenticate to the private operator dashboard.
+- Only the private dashboard can launch or stop billable agent sessions.
+- The race circuit is publicly reachable so OpenAI-hosted computer-use browsers can operate it.
+- `OPENAI_API_KEY` is stored as a Sites runtime secret and is never included in browser code.
+- Public write endpoints require their own authorization.
+
+### Deployment direction
+
+- Preferred durable deployment: ChatGPT Sites.
+- Immediate fallback during migration: Cloudflare Quick Tunnel from the local prototype.
+- The existing Node server must be adapted to the Sites/Vinext Cloudflare Worker runtime.
+- Private-site authentication may not be available inside a hosted computer-use browser; this is why the circuit and operator dashboard are separated.
+- Optional WebMCP tools can expose the circuit's existing actions to compatible browser agents, while preserving ordinary visual controls.
+
 ## Immediate Questions
 
 1. What decisions can each driving agent make?
@@ -29,6 +91,8 @@ Two AI agents perceive, decide, act, and compete in a shared visual environment 
 3. How is performance measured beyond simply winning the race?
 4. What is the clearest visible moment that proves computer use is controlling both cars?
 5. What failure or recovery behavior makes the demo more than a scripted race?
+6. Should the public circuit use short-lived race IDs or signed session tokens to prevent unauthorized control?
+7. What telemetry transport should connect the public circuit and private dashboard within the Sites runtime?
 
 ## References
 
