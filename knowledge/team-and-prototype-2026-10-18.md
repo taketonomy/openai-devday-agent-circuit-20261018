@@ -22,6 +22,19 @@ The prototype is a two-car circuit race:
 
 Two AI agents perceive, decide, act, and compete in a shared visual environment in real time.
 
+## Concept Background — Tesla Roadster Event
+
+The team's visual and presentation concept was inspired by [Tesla's October 2026 Roadster event post](https://x.com/Tesla/status/2110976226084970849). The shared reference showed a theatrical night demonstration built around an illuminated curved ramp, airborne vehicle motion, vapor, and high-contrast red-and-white lighting.
+
+The team carried forward the event's underlying presentation ideas:
+
+- Make vehicle behavior immediately legible through movement rather than explanation.
+- Turn a technical capability into a short, memorable live spectacle.
+- Use a shared arena to create tension, comparison, and a clear payoff.
+- Present autonomy as visible action: perception, decision, control, and recovery.
+
+Agent Circuit applies those ideas to two AI-controlled cars competing on one circuit. The reference influenced the atmosphere and demo storytelling, not the implementation or branding. The project is independent of Tesla, and the motion concept uses original assets without Tesla imagery, logos, or vehicle designs.
+
 ## Proposed Sharing and Hosting Architecture
 
 Use ChatGPT Sites as the durable team-demo host, with a security boundary between the operator controls and the page driven by the computer-use agents.
@@ -97,5 +110,6 @@ flowchart TB
 ## References
 
 - [Agents API computer use documentation](https://developers.openai.com/api/docs/guides/agents-api/tools/computer-use)
+- [Tesla Roadster event reference on X](https://x.com/Tesla/status/2110976226084970849)
 - [Takao Ken on X](https://x.com/takaoken)
 - [akari on X](https://x.com/Rijikai_)

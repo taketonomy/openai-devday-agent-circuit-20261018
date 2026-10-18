@@ -32,7 +32,9 @@ Never place an API key in browser code, source files, commits, or logs.
 
 ## Motion concept
 
-The `concept-video/` directory contains the original cinematic key art, reproducible render scripts, and three video iterations. The visuals use original assets and do not include Tesla branding or source imagery.
+The team's presentation concept was inspired by [Tesla's October 2026 Roadster event post](https://x.com/Tesla/status/2110976226084970849): a theatrical night arena, an illuminated curved ramp, airborne vehicle motion, vapor, and dramatic red-and-white lighting. We translated that sense of spectacle into an arena where two AI agents visibly perceive, decide, and race.
+
+The `concept-video/` directory contains the original cinematic key art, reproducible render scripts, and three video iterations. The event is a creative reference only; the project is independent of Tesla, and its visuals use original assets without Tesla branding, source imagery, or vehicle designs.
 
 ## Documentation
 
