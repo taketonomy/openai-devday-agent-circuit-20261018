@@ -76,6 +76,14 @@ dl { display: grid; grid-template-columns: 1fr 1fr; margin: 0; gap: 1px; backgro
 dl div { background: #0b0e14; padding: 10px; min-width: 0; }
 dt { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; }
 dd { margin: 5px 0 0; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.presence-panel { margin-top: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.025); }
+.presence-panel > p:first-child { margin: 0 0 8px; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; }
+.nudge-grid { display: grid; grid-template-columns: .8fr .9fr 1.35fr; gap: 6px; }
+.nudge-grid button { padding: .55rem .3rem; font-size: 10px; }
+.cyan-card .nudge-grid button:hover { border-color: rgba(89,220,255,.6); }
+.violet-card .nudge-grid button:hover { border-color: rgba(169,133,255,.6); }
+.acknowledgement { min-height: 2.5em; margin: 8px 2px 0; color: #c2cad6; font-size: 11px; line-height: 1.35; }
+.acknowledgement.received { color: #75e8b1; }
 .control-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
 .control-grid button { padding: .6rem .35rem; font-size: 11px; }
 .control-grid button:last-child { grid-column: 2; }

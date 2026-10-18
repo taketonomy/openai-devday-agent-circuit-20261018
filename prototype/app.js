@@ -23,7 +23,14 @@ const agents = {
 };
 
 function makeAgent(id, color, lane, confidence, accel, handling) {
-  return { id, color, lane, confidence, accel, handling, progress: -0.01, speed: 0, lap: 0, steering: 0, throttle: 0, brake: 0, decision: "observing", finished: false, finishTime: null, burst: 0 };
+  return {
+    id, color, lane, confidence, accel, handling,
+    progress: -0.01, speed: 0, lap: 0, steering: 0, throttle: 0, brake: 0,
+    decision: "observing", nextIntent: "assess the circuit", finished: false,
+    finishTime: null, burst: 0, pendingNudge: null, activeNudge: null,
+    nudgeExpiresAt: 0, humanSignal: "none", acknowledgement: `Agent ${id.toUpperCase()} is working autonomously.`,
+    acknowledgementUntil: 0, challengeTriggered: false, challengeUntil: 0,
+  };
 }
 
 function pointOnTrack(progress, lane = 0) {
@@ -39,22 +46,81 @@ function localDecision(agent, rival) {
   const p = pointOnTrack(agent.progress, agent.lane);
   const gap = (rival.progress + rival.lap) - (agent.progress + agent.lap);
   const corner = p.curve > .64;
+
+  if (agent.id === "b" && !agent.challengeTriggered && agent.lap === 0 && agent.progress > .3) {
+    agent.challengeTriggered = true;
+    agent.challengeUntil = elapsed + 3200;
+    log("Agent B encountered low grip — human guidance is available", agent.color);
+  }
+
+  if (agent.challengeUntil > elapsed) {
+    agent.throttle = .35;
+    agent.brake = .12;
+    agent.decision = "recovering from low grip";
+    agent.nextIntent = "stabilize, then regain pace";
+    return;
+  }
+
   agent.throttle = corner ? (agent.id === "a" ? .69 : .62) : 1;
   agent.brake = corner && agent.speed > (agent.id === "b" ? .00041 : .00045) ? .58 : 0;
   agent.steering = Math.sin(agent.progress * TAU) * agent.handling * 140;
+
+  if (agent.activeNudge === "safer") {
+    agent.throttle = Math.min(agent.throttle, corner ? .48 : .78);
+    agent.brake = corner ? Math.max(agent.brake, .38) : agent.brake;
+  }
+
   if (Math.abs(gap) < .025 && gap > 0) {
     agent.throttle = 1;
     agent.lane += agent.id === "a" ? -.12 : .12;
     agent.decision = "attack opening";
+    agent.nextIntent = "complete the pass";
   } else if (corner) {
     agent.decision = agent.brake ? "brake + rotate" : "hold racing line";
+    agent.nextIntent = agent.activeNudge === "safer" ? "exit corner under control" : "accelerate at corner exit";
   } else {
     agent.decision = "accelerate";
+    agent.nextIntent = gap > 0 ? "close the gap" : "protect the lead";
   }
+}
+
+function applyPendingNudge(agent) {
+  if (!agent.pendingNudge) return;
+  const p = pointOnTrack(agent.progress, agent.lane);
+  const waitedLongEnough = elapsed - agent.pendingNudge.queuedAt > 1200;
+  if (p.curve > .5 && !waitedLongEnough) return;
+
+  const { kind, label } = agent.pendingNudge;
+  agent.pendingNudge = null;
+  agent.activeNudge = kind;
+  agent.nudgeExpiresAt = elapsed + 4200;
+  agent.humanSignal = label;
+
+  if (kind === "encourage") {
+    agent.burst = Math.max(agent.burst, .00007);
+    agent.confidence = Math.min(.98, agent.confidence + .015);
+    agent.nextIntent = "use the next opening";
+  } else if (kind === "safer") {
+    agent.confidence = Math.min(.98, agent.confidence + .01);
+    agent.nextIntent = "reduce risk through the next corners";
+  } else if (kind === "alternative") {
+    agent.lane = Math.max(-42, Math.min(42, -agent.lane));
+    agent.challengeUntil = Math.min(agent.challengeUntil, elapsed + 500);
+    agent.nextIntent = "switch line and rebuild speed";
+  }
+
+  agent.acknowledgement = `Received “${label}”. I’ll ${agent.nextIntent}.`;
+  agent.acknowledgementUntil = elapsed + 5000;
+  log(`Agent ${agent.id.toUpperCase()} acknowledged: ${label}`, agent.color);
 }
 
 function updateAgent(agent, rival, dt) {
   if (agent.finished) return;
+  applyPendingNudge(agent);
+  if (agent.activeNudge && elapsed >= agent.nudgeExpiresAt) {
+    agent.activeNudge = null;
+    agent.humanSignal = "incorporated";
+  }
   if (!externalMode) localDecision(agent, rival);
   const drag = .000045 + agent.speed * .026;
   agent.speed += (agent.accel * agent.throttle - drag - agent.brake * .00016) * dt;
@@ -159,8 +225,13 @@ function updateHud() {
     document.querySelector(`#lap${suffix}`).textContent = `${Math.min(agent.lap, LAPS_TO_WIN)} / ${LAPS_TO_WIN}`;
     document.querySelector(`#speed${suffix}`).textContent = `${Math.round(agent.speed * 470000)} km/h`;
     document.querySelector(`#decision${suffix}`).textContent = agent.decision;
+    document.querySelector(`#intent${suffix}`).textContent = agent.nextIntent;
     document.querySelector(`#confidence${suffix}`).textContent = Math.min(.99, agent.confidence + agent.speed * 35).toFixed(2);
+    document.querySelector(`#human${suffix}`).textContent = agent.pendingNudge ? `queued: ${agent.pendingNudge.label}` : agent.humanSignal;
     document.querySelector(`#status${suffix}`).textContent = agent.finished ? "FINISHED" : running ? (externalMode ? "EXTERNAL" : "AUTONOMOUS") : "READY";
+    const acknowledgement = document.querySelector(`#ack${suffix}`);
+    acknowledgement.textContent = elapsed < agent.acknowledgementUntil ? agent.acknowledgement : `Agent ${suffix} is working autonomously.`;
+    acknowledgement.classList.toggle("received", elapsed < agent.acknowledgementUntil);
   }
 }
 
@@ -201,6 +272,17 @@ function applyControl(agent, action) {
   log(`Agent ${agent.id.toUpperCase()}: ${action}`, agent.color);
 }
 
+function queueNudge(agent, kind) {
+  const labels = { encourage: "Encourage", safer: "Drive safer", alternative: "Try another strategy" };
+  const label = labels[kind];
+  if (!label || agent.finished) return;
+  agent.pendingNudge = { kind, label, queuedAt: elapsed };
+  agent.humanSignal = `queued: ${label}`;
+  agent.acknowledgement = `I heard “${label}”. I’ll apply it at the next safe moment.`;
+  agent.acknowledgementUntil = elapsed + 5000;
+  log(`Human → Agent ${agent.id.toUpperCase()}: ${label}`, agent.color);
+}
+
 function log(message, color = "#8994a5") {
   const item = document.createElement("li"); item.style.borderColor = color;
   item.innerHTML = `<time>${(elapsed / 1000).toFixed(1)}s</time>${message}`;
@@ -237,6 +319,9 @@ launchAgentsButton.addEventListener("click", async () => {
 });
 document.querySelectorAll("[data-control]").forEach(button => button.addEventListener("click", () => {
   const [id, action] = button.dataset.control.split("-"); applyControl(agents[id], action);
+}));
+document.querySelectorAll("[data-nudge]").forEach(button => button.addEventListener("click", () => {
+  const [id, kind] = button.dataset.nudge.split("-"); queueNudge(agents[id], kind);
 }));
 
 log("Prototype ready");
