@@ -6,7 +6,7 @@
 - Takao Ken ([@takaoken](https://x.com/takaoken)) — data/AI engineering and initial prototype
 - akari ([@Rijikai_](https://x.com/Rijikai_)) — AR, engineering, and HCI interests
 
-The team coordinated through an X group chat created by Takao Ken after meeting at the DevDay hackathon eve party.
+The team initially coordinated through an X group chat created by Takao Ken after meeting at the DevDay hackathon eve party. On October 18, 2026, the team moved coordination to Slack channel `#all-hack20261018`, as confirmed by Taketo and the shared screenshot.
 
 ## Prototype A — Autonomous Agent Race
 
