@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Circuit — OpenAI DevDay Prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">OPENAI DEVDAY HACKATHON · WORKING PROTOTYPE</p>
+          <h1>Agent Circuit</h1>
+        </div>
+        <div class="race-actions">
+          <button id="startButton" class="primary">Start race</button>
+          <button id="resetButton">Reset</button>
+          <button id="modeButton" aria-pressed="false">Mode: local agents</button>
+          <button id="launchAgentsButton">Launch OpenAI agents</button>
+        </div>
+      </header>
+
+      <section class="stage" aria-label="Two-agent racing circuit">
+        <canvas id="raceCanvas" width="1600" height="900"></canvas>
+        <div id="countdown" class="countdown" aria-live="polite"></div>
+        <div class="stage-copy">
+          <span>Same stage.</span><span>Two minds.</span><span>No driver.</span>
+        </div>
+        <div class="legend"><i class="cyan"></i>Agent A <i class="violet"></i>Agent B</div>
+      </section>
+      <p id="apiNotice" class="api-notice">Checking secure Agents API configuration…</p>
+
+      <section class="dashboard">
+        <article class="agent-card cyan-card" data-agent="a">
+          <div class="agent-heading">
+            <div><span class="dot cyan"></span><h2>Agent A</h2></div>
+            <span id="statusA" class="status">READY</span>
+          </div>
+          <p class="strategy">Inside line · early acceleration</p>
+          <dl>
+            <div><dt>Lap</dt><dd id="lapA">0 / 3</dd></div>
+            <div><dt>Speed</dt><dd id="speedA">0</dd></div>
+            <div><dt>Decision</dt><dd id="decisionA">observing</dd></div>
+            <div><dt>Confidence</dt><dd id="confidenceA">0.94</dd></div>
+          </dl>
+          <div class="control-grid" aria-label="Agent A computer-use controls">
+            <button data-control="a-left">Steer left</button>
+            <button data-control="a-throttle" class="accent">Throttle</button>
+            <button data-control="a-right">Steer right</button>
+            <button data-control="a-brake">Brake</button>
+          </div>
+        </article>
+
+        <article class="agent-card violet-card" data-agent="b">
+          <div class="agent-heading">
+            <div><span class="dot violet"></span><h2>Agent B</h2></div>
+            <span id="statusB" class="status">READY</span>
+          </div>
+          <p class="strategy">Late brake · outside attack</p>
+          <dl>
+            <div><dt>Lap</dt><dd id="lapB">0 / 3</dd></div>
+            <div><dt>Speed</dt><dd id="speedB">0</dd></div>
+            <div><dt>Decision</dt><dd id="decisionB">observing</dd></div>
+            <div><dt>Confidence</dt><dd id="confidenceB">0.91</dd></div>
+          </dl>
+          <div class="control-grid" aria-label="Agent B computer-use controls">
+            <button data-control="b-left">Steer left</button>
+            <button data-control="b-throttle" class="accent">Throttle</button>
+            <button data-control="b-right">Steer right</button>
+            <button data-control="b-brake">Brake</button>
+          </div>
+        </article>
+
+        <article class="event-card">
+          <h2>Live event stream</h2>
+          <ol id="eventLog" aria-live="polite"></ol>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
+
