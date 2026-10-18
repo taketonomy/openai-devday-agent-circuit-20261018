@@ -4,7 +4,7 @@ OpenAI DevDay Hackathon project — October 18, 2026.
 
 Two autonomous agents compete on the same circuit. Each agent observes the browser, decides how to drive, and operates its own car through computer-use controls.
 
-A complementary HCI prototype explores shared agency: a human can intervene in an agent's behavior at critical moments to help it recover and achieve the goal, then return control to the agent.
+A complementary HCI prototype explores human presence during autonomous work. Instead of waiting silently or supervising every step, people receive meaningful live progress and can ask, react, or give lightweight guidance while the agent continues toward the goal.
 
 ## Team
 

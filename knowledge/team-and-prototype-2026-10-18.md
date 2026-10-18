@@ -18,19 +18,36 @@ The prototype is a two-car circuit race:
 - Each agent independently drives one car.
 - Each agent uses computer-use controls to perceive the environment and operate its car.
 
-## Prototype B — Human Intervention in Agent Action
+## Prototype B — Human Presence During Autonomous Work
 
-Akari created a second prototype from an HCI research perspective. Its central concept is that a human can interrupt or intervene in an agent's autonomous behavior when necessary, helping the agent recover or achieve the intended goal.
+Akari created a second prototype from an HCI research perspective. It addresses a basic problem with long-running agents: waiting silently for an agent to finish is boring and makes the work feel distant or unreal.
 
-This introduces a complementary interaction model:
+The goal is not to make the human supervise every step. It is to preserve a sense of presence while the agent works. The human should understand what is happening, feel that progress is real, and be able to interact without taking over the process.
+
+This creates a complementary interaction model:
 
 ```text
-Agent observes → Agent acts → Human intervenes when needed → Agent adapts → Goal achieved
+Agent works autonomously
+        ↓
+Shows current status, intent, and meaningful progress
+        ↓
+Human observes and optionally asks, reacts, or gives a lightweight nudge
+        ↓
+Agent acknowledges the interaction and continues
+        ↓
+Milestone or goal achieved
 ```
 
-Rather than treating autonomy as an all-or-nothing mode, the prototype explores shared agency: the agent continues doing the work, while the human supplies timely judgment, correction, or direction at critical moments.
+The prototype therefore explores **lightweight shared agency** rather than continuous human control. Interruption is one possible interaction, but not the primary experience. The essential qualities are:
 
-The precise intervention mechanism and handoff behavior are still to be documented.
+- **Progress awareness:** show the current phase, recent action, next intention, and meaningful milestones.
+- **Legibility:** translate internal agent activity into concise, human-understandable updates.
+- **Lightweight participation:** let the human ask a question, react, encourage, redirect, or offer a constraint without micromanaging.
+- **Acknowledgement:** make it visible when the agent receives and incorporates human input.
+- **Continuity:** keep the agent moving unless an explicit pause or takeover is necessary.
+- **Reality in progress:** use live evidence—such as motion, state changes, artifacts, or telemetry—so progress feels tangible rather than simulated.
+
+The intended feeling is closer to being present with a capable collaborator than watching a loading screen or operating a remote-controlled tool.
 
 ## Demo Story
 
@@ -120,9 +137,11 @@ flowchart TB
 5. What failure or recovery behavior makes the demo more than a scripted race?
 6. Should the public circuit use short-lived race IDs or signed session tokens to prevent unauthorized control?
 7. What telemetry transport should connect the public circuit and private dashboard within the Sites runtime?
-8. What triggers human intervention: a user decision, an agent request, low confidence, or detected failure?
-9. Does intervention pause the agent, modify its plan, directly control the car, or provide higher-level guidance?
-10. How does the interface make control ownership and the return to autonomy visible?
+8. Which updates are meaningful enough to show without overwhelming the human?
+9. Which lightweight interactions should be supported: questions, reactions, encouragement, constraints, or redirection?
+10. When should an interaction influence the plan immediately, wait for a safe checkpoint, or pause the agent?
+11. How does the interface show that the agent understood and incorporated human input?
+12. What live evidence best creates a feeling of real progress: motion, telemetry, screenshots, artifacts, narration, or milestones?
 
 ## References
 
